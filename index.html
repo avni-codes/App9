@@ -101,21 +101,21 @@
           /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
           /* PUT ANY CHANGES TO THE JAVASCRIPT HERE  */
-          drawImageIOSFix(context2,img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500);
-          // the above line of code creates the second image data that will be turned blue
-          var image2 = context2.getImageData(0, 0, 600, 500);
-          // This above line of code gets the image data for the second canvas
-          var data = image2.data;
+          //drawImageIOSFix(context2,img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500);
+          // the above line of code creates the second image data that will be turned blue: commented out since not needed for app 9
+          //var image2 = context2.getImageData(0, 0, 600, 500);
+          // This above line of code gets the image data for the second canvas: commented out since not needed for app 9
+          //var data = image2.data; : commented out since not needed for app 9
           
           // the below for loop goes through the pixels of the image and only takes the blue pigments of them
-          for(var i = 0; i < data.length; i += 4) {
-            data[i] = 0;
+          //for(var i = 0; i < data.length; i += 4) {
+            //data[i] = 0;
           // The above line of code sets the R value to 0
-            data[i + 1] = 0;
+            //data[i + 1] = 0;
           // The above line of code sets the G value to 0
-          } // end of for loop
-          context2.putImageData(image2, 0, 0);
-          // this put the altered image on the second canvas
+          //} // end of for loop
+          //context2.putImageData(image2, 0, 0);
+          // this put the altered image on the second canvas: commented out since not needed for app 9
           
           
         } // end of img.onload
@@ -156,14 +156,14 @@
         context.fillText("Original image will go here", 10, 20);
       </script>
       
-      <canvas id="blueCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas>   
+      <!-- <canvas id="blueCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas>   
       <script> /* This makes the second canvas called blueCanvas */
         var canvas2 = document.getElementById('blueCanvas');
         var context2 = canvas2.getContext("2d");
         context2.font = '20pt Calibri';
         context2.fillStyle = "black";
         context2.fillText("Isolated blue colors of the original image go here", 10, 20); 
-      </script>
+      </script> -->
 
     </div><!-- /content -->
     <div data-role="footer" data-position="fixed">
