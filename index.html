@@ -117,24 +117,24 @@
           //context2.putImageData(image2, 0, 0);
           // this put the altered image on the second canvas: commented out since not needed for app 9
           
-          function initialise() {
-           var canvas = document.getElementById("myCanvas");
-           //canvas.addEventListener("touchstart", doTouchStart, false);
-           canvas.addEventListener("mousedown", doMouseDown, false);
+          function init() {
+           var touchzone = document.getElementById("myCanvas");
+           touchzone.addEventListener("touchstart", doTouchStart, false);
+           //canvas.addEventListener("mousedown", doMouseDown, false);
           }
           
-          //function doTouchStart(event) {
-           //event.preventDefault();
+          function doTouchStart(event) {
+           event.preventDefault();
            
-           //canvas_x = event.targetTouches[0].pageX;
-           //canvas_y = event.targetTouches[0].pageY;
-           //alert("X=" + canvas_X + " Y=" + canvas_Y)
-          //}
-          function doMouseDown(event) {
-           canvas_x = event.pageX;
-           canvas_y = event.pageY;
-           alert("X=" + canvas_x + " Y=" + canvas_Y);
+           canvas_x = event.targetTouches[0].pageX;
+           canvas_y = event.targetTouches[0].pageY;
+           alert("X=" + canvas_X + " Y=" + canvas_Y)
           }
+          //function doMouseDown(event) {
+           //canvas_x = event.pageX;
+           //canvas_y = event.pageY;
+           //alert("X=" + canvas_x + " Y=" + canvas_Y);
+          //}
           
           
           
@@ -155,7 +155,7 @@
  </script>
  </head>
 
- <body onLoad="initialise()">
+ <body onLoad="init()">
   <div data-role="page" id = "pageone"> <!-- This creates the first page of the app where users can read up on how to use the app-->
    <div data-role="header">
     <h1>Image Analysis</h1> <!-- This sets the name of webpage/ header of the app to Image Analysis-->
@@ -184,6 +184,10 @@
       </div>
       <div id="messageDisplayArea"></div>
       
+      <div id="coords"></div>
+      <div id="touchzone"></div>
+       
+      </div>
       <canvas id="myCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen... -->
       <script> /* This script initiates the cavas and puts the text on the canvas "myCanvas" */
         var canvas = document.getElementById('myCanvas');
