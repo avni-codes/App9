@@ -118,10 +118,12 @@
           // this put the altered image on the second canvas: commented out since not needed for app 9
           
           function init() {
-           var touchzone = document.getElementById("myCanvas");
-           touchzone.addEventListener("touchstart", doTouchStart, false);
-           //canvas.addEventListener("mousedown", doMouseDown, false);
+           // Get a reference to our touch-sensitive element
+           var touchzone = document.getElementById("touchzone");
+           // Add an event handler for the touchstart event
+           touchzone.addEventListener("touchstart", touchHandler, false);
           }
+
           
           //function doTouchStart(event) {
            //event.preventDefault();
@@ -158,7 +160,7 @@
  </script>
  </head>
 
- <body onLoad="init()">
+ <body onload="init()">
   <div data-role="page" id = "pageone"> <!-- This creates the first page of the app where users can read up on how to use the app-->
    <div data-role="header">
     <h1>Image Analysis</h1> <!-- This sets the name of webpage/ header of the app to Image Analysis-->
