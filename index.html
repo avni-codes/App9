@@ -123,13 +123,16 @@
            //canvas.addEventListener("mousedown", doMouseDown, false);
           }
           
-          function doTouchStart(event) {
-           event.preventDefault();
-           
-           canvas_x = event.targetTouches[0].pageX;
-           canvas_y = event.targetTouches[0].pageY;
-           alert("X=" + canvas_X + " Y=" + canvas_Y)
-          }
+          //function doTouchStart(event) {
+           //event.preventDefault();
+           function touchHandler(event) {
+            var coords = document.getElementById("coords");
+            coords.innerHTML = 'x: ' + event.touches[0].pageX + ', y: ' + event.touches[0].pageY;
+           }
+           //canvas_x = event.targetTouches[0].pageX;
+           //canvas_y = event.targetTouches[0].pageY;
+           //alert("X=" + canvas_X + " Y=" + canvas_Y)
+          //}
           //function doMouseDown(event) {
            //canvas_x = event.pageX;
            //canvas_y = event.pageY;
