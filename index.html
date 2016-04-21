@@ -117,6 +117,19 @@
           //context2.putImageData(image2, 0, 0);
           // this put the altered image on the second canvas: commented out since not needed for app 9
           
+          function initialize() {
+           var canvas = document.getElementById("myCanvas");
+           canvas.addEventListener("touchstart", doTouchStart, false);
+          }
+          
+          function doTouchStart(event) {
+           event.preventDefault();
+           
+           canvas_x = event.targetTouches[0].pageX;
+           canvas_y = event.targetTouches[0].pageY;
+           alert("X=" + canvas_X + " Y=" + canvas_Y)
+          }
+          
           
         } // end of img.onload
         
@@ -157,7 +170,7 @@
     <div data-role="content">	
       <h2>Push button to take picture.</h2>
       <div>
-        <a href="#pageone" data-role="button">Go back to page one!</a>
+        <a href="#pageone" data-role="button">Or go back to page one!</a>
         Press orange button to create or choose image file:
         <input type="file" id="fileInput" STYLE="background-color: #FF6600;">
       </div>
