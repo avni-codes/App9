@@ -80,6 +80,8 @@
   var touchzone = document.getElementById("touchzone");
   // Add an event handler for the touchstart event
   touchzone.addEventListener("touchstart", touchHandler, false);
+  touchzone.addEventListener("mousedown", touchHandler, false);
+  
  }
 
  function touchHandler(event) {
