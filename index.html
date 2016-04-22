@@ -75,6 +75,19 @@
   ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh / vertSquashRatio);
  }
 
+ function init() {
+  // Get a reference to our touch-sensitive element
+  var touchzone = document.getElementById("touchzone");
+  // Add an event handler for the touchstart event
+  touchzone.addEventListener("touchstart", touchHandler, false);
+ }
+
+ function touchHandler(event) {
+  var coords = document.getElementById("coords");
+  coords.innerHTML = 'x: ' + event.touches[0].pageX + ', y: ' + event.touches[0].pageY;
+}
+ 
+
 /* window.onload necessary to keep javascripts from running before the app gets a chance to load entirely. */
  window.onload = function() {
   var fileInput = document.getElementById('fileInput');
@@ -94,9 +107,9 @@
         var img = new Image();
         img.onload = function() {
           /*This finally draws the image onto the first drawing canvas. The specific canvas is referred to by "context". This is established down in the HTML part of the file just under the first <canvas> tag. If we weren't worried about fixing an iPhone bug we would use context.drawImage(image, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500) instead of drawImageIOSFix */
-        
+          
           drawImageIOSFix(context,img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500);
-
+   
           /*  +++++++++++++++ BEGIN IMAGE PROCESSING +++++++++++++++ */
           /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
@@ -116,21 +129,8 @@
           //} // end of for loop
           //context2.putImageData(image2, 0, 0);
           // this put the altered image on the second canvas: commented out since not needed for app 9
-          
-          function init() {
-           // Get a reference to our touch-sensitive element
-           var touchzone = document.getElementById("touchzone");
-           // Add an event handler for the touchstart event
-           touchzone.addEventListener("touchstart", touchHandler, false);
-          }
-
-          
-          //function doTouchStart(event) {
-           //event.preventDefault();
-           function touchHandler(event) {
-            var coords = document.getElementById("coords");
-            coords.innerHTML = 'x: ' + event.touches[0].pageX + ', y: ' + event.touches[0].pageY;
-           }
+          init();
+ 
            //canvas_x = event.targetTouches[0].pageX;
            //canvas_y = event.targetTouches[0].pageY;
            //alert("X=" + canvas_X + " Y=" + canvas_Y)
@@ -160,7 +160,7 @@
  </script>
  </head>
 
- <body onload="init()">
+ <body>
   <div data-role="page" id = "pageone"> <!-- This creates the first page of the app where users can read up on how to use the app-->
    <div data-role="header">
     <h1>Image Analysis</h1> <!-- This sets the name of webpage/ header of the app to Image Analysis-->
