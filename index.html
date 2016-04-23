@@ -2,35 +2,35 @@
 <html lang="en">
 
 <!-- The following code has been developed by students and/or researchers of the Freshman Research Initiative, DIY Diagnostics Stream at The University of Texas at Austin.  This code is shared for demonstration purposes and should not be considered a product -- it is for entertainment purposes only.  Any user of this code does so at their own risk. Members of the DIY Stream, FRI, and The University of Texas system are not liable for anything related to this code.
- 
-  THIS CODE SHOULD NOT BE USED TO DIAGNOSE ANY KIND OF MEDICAL CONDITION.
- 
-  Further Information:
-  http://cns.utexas.edu/fri
- 
-  Research Educator:
-  Timothy E. Riedel
-  triedel@utexas.edu
- 
-  Authors in chronological order of contribution:
-  Author 1: Timothy E. Riedel
-  Author 2: Avni Kantawala
-  
-  References:
-  http://docs.webplatform.org/wiki/concepts/programming/drawing_images_onto_canvas#Loading_the_image_programmatically
-  http://www.html5rocks.com/en/tutorials/file/dndfiles/
-  http://www.w3.org/TR/FileAPI/
-  http://mobilehtml5.org/
-  http://stackoverflow.com/questions/11929099/html5-canvas-drawimage-ratio-bug-ios
-  
-  Brief Description of Goal of Code:
-  To analyze the photo for green pigment
- 
-  Known Issues:
-  None :D
+
+THIS CODE SHOULD NOT BE USED TO DIAGNOSE ANY KIND OF MEDICAL CONDITION.
+
+Further Information:
+http://cns.utexas.edu/fri
+
+Research Educator:
+Timothy E. Riedel
+triedel@utexas.edu
+
+Authors in chronological order of contribution:
+Author 1: Timothy E. Riedel
+Author 2: Avni Kantawala
+
+References:
+http://docs.webplatform.org/wiki/concepts/programming/drawing_images_onto_canvas#Loading_the_image_programmatically
+http://www.html5rocks.com/en/tutorials/file/dndfiles/
+http://www.w3.org/TR/FileAPI/
+http://mobilehtml5.org/
+http://stackoverflow.com/questions/11929099/html5-canvas-drawimage-ratio-bug-ios
+
+Brief Description of Goal of Code:
+To analyze the photo for green pigment
+
+Known Issues:
+None :D
 -->
 
- <head>
+<head>
   <meta charset="utf-8">
   <title>Photo Transform</title>
   <meta name="viewport" content="width=device-width, initial-scale=.7">
@@ -39,176 +39,214 @@
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script src="https://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
 
- <script>
+  <script>
   var docMod = document.lastModified; // gets last modified date and time of the index.html file
-  console.log("This file last modified  " + docMod); // displays last modified date and time in the javascipt browser console 
+  console.log("This file last modified  " + docMod); // displays last modified date and time in the javascipt browser console
 
-/* detectVerticalSquash & drawImageIOSFix = are functions that are critical due to a flaw in the iPhone camera software that squishes any photos displayed on an HTML5 canvas element. https://github.com/stomita/ios-imagefile-megapixel
-*/
- function detectVerticalSquash(img) {
-  var iw = img.naturalWidth, ih = img.naturalHeight;
-  var canvas = document.createElement('canvas');
-  canvas.width = 1;
-  canvas.height = ih;
-  var ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-  var data = ctx.getImageData(0, 0, 1, ih).data;
-  var sy = 0;
-  var ey = ih;
-  var py = ih;
-  while (py > sy) {
-   var alpha = data[(py - 1) * 4 + 3];
-   if (alpha === 0) {
-    ey = py;
-   } 
-   else {
-    sy = py;
-   }
-   py = (ey + sy) >> 1;
+  /* detectVerticalSquash & drawImageIOSFix = are functions that are critical due to a flaw in the iPhone camera software that squishes any photos displayed on an HTML5 canvas element. https://github.com/stomita/ios-imagefile-megapixel
+  */
+  function detectVerticalSquash(img) {
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    var canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = ih;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    var data = ctx.getImageData(0, 0, 1, ih).data;
+    var sy = 0;
+    var ey = ih;
+    var py = ih;
+    while (py > sy) {
+      var alpha = data[(py - 1) * 4 + 3];
+      if (alpha === 0) {
+        ey = py;
+      }
+      else {
+        sy = py;
+      }
+      py = (ey + sy) >> 1;
+    }
+    var ratio = (py / ih);
+    return (ratio===0)?1:ratio;
   }
-  var ratio = (py / ih);
-  return (ratio===0)?1:ratio;
- }
 
- function drawImageIOSFix(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
-  var vertSquashRatio = detectVerticalSquash(img);
-  ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh / vertSquashRatio);
- }
+  function drawImageIOSFix(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
+    var vertSquashRatio = detectVerticalSquash(img);
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh / vertSquashRatio);
+  }
 
- function init() {
-  // Get a reference to our touch-sensitive element
-  var touchzone = document.getElementById("myCanvas");
-  // Add an event handler for the touchstart event
-  touchzone.addEventListener("touchstart", touchHandler, false);
-  touchzone.addEventListener("mousedown", touchHandler, false);
-  
- }
+  function init() {
+    var roiRegion = 10;
+    // Get a reference to our touch-sensitive element
+    var touchzone = document.getElementById("myCanvas");
+    var coords = document.getElementById("coords");
+    // Add an event handler for the touchstart event
+    touchzone.addEventListener("touchstart", touchHandler, false);
+    touchzone.addEventListener("mousedown", touchHandler, false);
+    clicks = [];
 
- function touchHandler(event) {
-  var coords = document.getElementById("coords");
-  console.log(event.pageX, event.pageY);
-  coords.innerHTML = 'x: ' + event.pageX + ', y: ' + event.pageY;
-}
- 
+    function touchHandler(event) {
+      var canvas = document.getElementById("myCanvas");
+      var offset = getOffset(canvas);
+      cx = event.pageX - offset.left;
+      cy = event.pageY - offset.top;
+      //console.log(event.pageX, event.pageY);
+      console.log(cx, cy);
+      if (cx < roiRegion) {
+        cx = roiRegion;
+      }
+      if (cy < roiRegion) {
+        cy = roiRegion;
+      }
+      if (cx > canvas.width - roiRegion) {
+        cx = canvas.width - roiRegion;
+      }
+      if (cy > canvas.height - roiRegion) {
+        cy = canvas.height - roiRegion;
+      }
+      console.log(cx, cy);
+      clicks.push({x: cx, y: cy})
+      coords.innerHTML = 'x1: ' + cx+ ', y1: ' + cy;
+    }
 
-/* window.onload necessary to keep javascripts from running before the app gets a chance to load entirely. */
- window.onload = function() {
-  var fileInput = document.getElementById('fileInput');
-  var messageDisplayArea = document.getElementById('messageDisplayArea');
-  /* fileInput.addEventListener looks for any change in the <input> tag indicating that the user has selected a file (picture). */
-  fileInput.addEventListener('change', function(e) {
-    var file = fileInput.files[0];
-    var imageType = /image.*/;
-    /* if (file.type.match(imageType)) checks that the selected file is indeed an image. */
-    if (file.type.match(imageType)) {
-      /* new FileReader(); and reader.onload start some kind of file reading process in javaScript. I do not understand why this is necessary although it may simply slow things down to let the image load. */
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        /* messageDisplayArea.innerHTML not needed but allows you to send a message at this point in the program. */
-        messageDisplayArea.innerHTML = "You successfully uploaded an image!";
-        /* new Image() and img.onload start some kind of new image creation process in javaScript. I do not understand why this is necessary although it may simply slow things down to let the image load. */
-        var img = new Image();
-        img.onload = function() {
-          /*This finally draws the image onto the first drawing canvas. The specific canvas is referred to by "context". This is established down in the HTML part of the file just under the first <canvas> tag. If we weren't worried about fixing an iPhone bug we would use context.drawImage(image, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500) instead of drawImageIOSFix */
-          
-          drawImageIOSFix(context,img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500);
-   
-          /*  +++++++++++++++ BEGIN IMAGE PROCESSING +++++++++++++++ */
-          /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    function getOffset(obj) {
+      var canvas
+      var offsetLeft = 0;
+      var offsetTop = 0;
+      do {
+        if (!isNaN(obj.offsetLeft)){
+          offsetLeft += obj.offsetLeft;
+        }
+        if (!isNaN(obj.offsetTop)){
+          offsetTop += obj.offsetTop;
+        }
+      } while (obj = obj.offsetParent );
+      return {left: offsetLeft, top: offsetTop}
+    }
 
-          /* PUT ANY CHANGES TO THE JAVASCRIPT HERE  */
-          //drawImageIOSFix(context2,img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500);
-          // the above line of code creates the second image data that will be turned blue: commented out since not needed for app 9
-          //var image2 = context2.getImageData(0, 0, 600, 500);
-          // This above line of code gets the image data for the second canvas: commented out since not needed for app 9
-          //var data = image2.data; : commented out since not needed for app 9
-          
-          // the below for loop goes through the pixels of the image and only takes the blue pigments of them
-          //for(var i = 0; i < data.length; i += 4) {
+  }
+
+
+
+
+  /* window.onload necessary to keep javascripts from running before the app gets a chance to load entirely. */
+  window.onload = function() {
+    var fileInput = document.getElementById('fileInput');
+    var messageDisplayArea = document.getElementById('messageDisplayArea');
+    /* fileInput.addEventListener looks for any change in the <input> tag indicating that the user has selected a file (picture). */
+    fileInput.addEventListener('change', function(e) {
+      var file = fileInput.files[0];
+      var imageType = /image.*/;
+      /* if (file.type.match(imageType)) checks that the selected file is indeed an image. */
+      if (file.type.match(imageType)) {
+        /* new FileReader(); and reader.onload start some kind of file reading process in javaScript. I do not understand why this is necessary although it may simply slow things down to let the image load. */
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          /* messageDisplayArea.innerHTML not needed but allows you to send a message at this point in the program. */
+          messageDisplayArea.innerHTML = "You successfully uploaded an image!";
+          /* new Image() and img.onload start some kind of new image creation process in javaScript. I do not understand why this is necessary although it may simply slow things down to let the image load. */
+          var img = new Image();
+          img.onload = function() {
+            /*This finally draws the image onto the first drawing canvas. The specific canvas is referred to by "context". This is established down in the HTML part of the file just under the first <canvas> tag. If we weren't worried about fixing an iPhone bug we would use context.drawImage(image, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500) instead of drawImageIOSFix */
+
+            drawImageIOSFix(context,img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500);
+
+            /*  +++++++++++++++ BEGIN IMAGE PROCESSING +++++++++++++++ */
+            /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+            /* PUT ANY CHANGES TO THE JAVASCRIPT HERE  */
+            //drawImageIOSFix(context2,img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 600, 500);
+            // the above line of code creates the second image data that will be turned blue: commented out since not needed for app 9
+            //var image2 = context2.getImageData(0, 0, 600, 500);
+            // This above line of code gets the image data for the second canvas: commented out since not needed for app 9
+            //var data = image2.data; : commented out since not needed for app 9
+
+            // the below for loop goes through the pixels of the image and only takes the blue pigments of them
+            //for(var i = 0; i < data.length; i += 4) {
             //data[i] = 0;
-          // The above line of code sets the R value to 0
+            // The above line of code sets the R value to 0
             //data[i + 1] = 0;
-          // The above line of code sets the G value to 0
-          //} // end of for loop
-          //context2.putImageData(image2, 0, 0);
-          // this put the altered image on the second canvas: commented out since not needed for app 9
-          init();
- 
-           //canvas_x = event.targetTouches[0].pageX;
-           //canvas_y = event.targetTouches[0].pageY;
-           //alert("X=" + canvas_X + " Y=" + canvas_Y)
-          //}
-          //function doMouseDown(event) {
-           //canvas_x = event.pageX;
-           //canvas_y = event.pageY;
-           //alert("X=" + canvas_x + " Y=" + canvas_Y);
-          //}
-          
-          
-          
-        } // end of img.onload
-        
-        img.src = reader.result;
-      } //  end of reader.onload
-      
-      reader.readAsDataURL(file);
-    } // end of the if statement checking that file is an image
-    else
-    {
-      // this is what happens if the orignial file selected is not an image file
-      messageDisplayArea.innerHTML = "File not supported!"
-    } // end of the else statement if file in NOT an image
-  }); // end of the fileInput.addEventListener function
- } // end of the window.onload function
- </script>
- </head>
+            // The above line of code sets the G value to 0
+            //} // end of for loop
+            //context2.putImageData(image2, 0, 0);
+            // this put the altered image on the second canvas: commented out since not needed for app 9
+            init();
 
- <body>
+            //canvas_x = event.targetTouches[0].pageX;
+            //canvas_y = event.targetTouches[0].pageY;
+            //alert("X=" + canvas_X + " Y=" + canvas_Y)
+            //}
+            //function doMouseDown(event) {
+            //canvas_x = event.pageX;
+            //canvas_y = event.pageY;
+            //alert("X=" + canvas_x + " Y=" + canvas_Y);
+            //}
+
+
+
+          } // end of img.onload
+
+          img.src = reader.result;
+        } //  end of reader.onload
+
+        reader.readAsDataURL(file);
+      } // end of the if statement checking that file is an image
+      else
+      {
+        // this is what happens if the orignial file selected is not an image file
+        messageDisplayArea.innerHTML = "File not supported!"
+      } // end of the else statement if file in NOT an image
+    }); // end of the fileInput.addEventListener function
+  } // end of the window.onload function
+  </script>
+</head>
+
+<body>
   <div data-role="page" id = "pageone"> <!-- This creates the first page of the app where users can read up on how to use the app-->
-   <div data-role="header">
-    <h1>Image Analysis</h1> <!-- This sets the name of webpage/ header of the app to Image Analysis-->
-   </div>
-   <div data-role="content">	
-    <p><b> Image Analysis Instructions</b> </p> <!-- This text tells the user how to upload a picture and what to do with the picture-->
-    <p> Step 1. Take an image of the two tubes with the tubes being the main focus of the image</p>
-    <p> Step 2. Tap the left tube and then the right tube with your finger so that the app knows where to look</p>
-    <p> Step 3. Wait for the app to display the results about the color analysis</p>
-    <a href="#pagetwo" data-role="button">Go to Image Analysis</a> <!-- This button sends the user to the second page where they can actually upload a photo and have it be analyzed -->
-   </div>
-   <div data-role="footer" data-position="fixed">
-    <p>DIY Diagnostics</p>
-   </div><!-- /footer -->
+    <div data-role="header">
+      <h1>Image Analysis</h1> <!-- This sets the name of webpage/ header of the app to Image Analysis-->
+    </div>
+    <div data-role="content">
+      <p><b> Image Analysis Instructions</b> </p> <!-- This text tells the user how to upload a picture and what to do with the picture-->
+      <p> Step 1. Take an image of the two tubes with the tubes being the main focus of the image</p>
+      <p> Step 2. Tap the left tube and then the right tube with your finger so that the app knows where to look</p>
+      <p> Step 3. Wait for the app to display the results about the color analysis</p>
+      <a href="#pagetwo" data-role="button">Go to Image Analysis</a> <!-- This button sends the user to the second page where they can actually upload a photo and have it be analyzed -->
+    </div>
+    <div data-role="footer" data-position="fixed">
+      <p>DIY Diagnostics</p>
+    </div><!-- /footer -->
   </div>
   <div data-role="page" id="pagetwo">
-    
+
     <div data-role="header">
-    <h1>Image Analysis</h1></div><!-- /header -->
-    <div data-role="content">	
-      <h2>Push button to take or upload picture.</h2>
-      <div>
-        <a href="#pageone" data-role="button">Or go back to page one!</a>
-        Press orange button to create or choose image file:
-        <input type="file" id="fileInput" STYLE="background-color: #FF6600;">
-      </div>
-      <div id="messageDisplayArea"></div>
-      
-      <div id="coords"></div>
-      <canvas id="myCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen... -->
-      <script> /* This script initiates the cavas and puts the text on the canvas "myCanvas" */
+      <h1>Image Analysis</h1></div><!-- /header -->
+      <div data-role="content">
+        <h2>Push button to take or upload picture.</h2>
+        <div>
+          <a href="#pageone" data-role="button">Or go back to page one!</a>
+          Press orange button to create or choose image file:
+          <input type="file" id="fileInput" STYLE="background-color: #FF6600;">
+        </div>
+        <div id="messageDisplayArea"></div>
+
+        <div id="coords"></div>
+        <canvas id="myCanvas" width=600 height=500 style="border:0px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen... -->
+        <script> /* This script initiates the cavas and puts the text on the canvas "myCanvas" */
         var canvas = document.getElementById('myCanvas');
         var context = canvas.getContext("2d");
         context.font = '20pt Calibri';
         context.fillStyle = "black";
         context.fillText("Original image will go here", 10, 20);
-      </script>
-      
-      <!-- <canvas id="blueCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas>   
-      <script> /* This makes the second canvas called blueCanvas */
+        </script>
+
+        <!-- <canvas id="blueCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas>
+        <script> /* This makes the second canvas called blueCanvas */
         var canvas2 = document.getElementById('blueCanvas');
         var context2 = canvas2.getContext("2d");
         context2.font = '20pt Calibri';
         context2.fillStyle = "black";
-        context2.fillText("Isolated blue colors of the original image go here", 10, 20); 
+        context2.fillText("Isolated blue colors of the original image go here", 10, 20);
       </script> -->
 
     </div><!-- /content -->
@@ -216,5 +254,5 @@
       <p>DIY Diagnostics</p>
     </div><!-- /footer -->
   </div><!-- /page -->
- </body>
+</body>
 </html>
