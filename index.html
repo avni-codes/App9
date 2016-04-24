@@ -15,6 +15,7 @@ triedel@utexas.edu
 Authors in chronological order of contribution:
 Author 1: Timothy E. Riedel
 Author 2: Avni Kantawala
+Author 3: Andrea Olvera
 
 References:
 http://docs.webplatform.org/wiki/concepts/programming/drawing_images_onto_canvas#Loading_the_image_programmatically
@@ -27,7 +28,7 @@ Brief Description of Goal of Code:
 To analyze the photo for green pigment
 
 Known Issues:
-None :D
+Sometimes, if the page is scrolled up, then the page won't scroll down again.
 -->
 
 <head>
@@ -75,23 +76,32 @@ None :D
     ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh / vertSquashRatio);
   }
 
+  //The following function is under the original onload funciton since this funcitons needs to happen before the image loads
   function init() {
+    // The variable roiRegion can be set to any pixel length depending on the funciton of the app
     var roiRegion = 10;
     // Get a reference to our touch-sensitive element
     var touchzone = document.getElementById("myCanvas");
+    // ALlow the variable coords to be associated with the innerHTML
     var coords = document.getElementById("coords");
-    // Add an event handler for the touchstart event
+    // Add an event handler for the touchstart event either a touch or a click
     touchzone.addEventListener("touchstart", touchHandler, false);
     touchzone.addEventListener("mousedown", touchHandler, false);
+    // This makes an array where I can store the coordinates of every touchevent
     clicks = [];
 
+    // This function stores every touch event, and it is under the umbrella function init()
     function touchHandler(event) {
+      // This makes sure the data comes from myCanvas
       var canvas = document.getElementById("myCanvas");
+      // This line calls the function getOffset to account for the fact that the canvas is not at point 0,0 of the page
       var offset = getOffset(canvas);
+      // cx and cy are the x and y coordinates normalized for offset of each touch event
       cx = event.pageX - offset.left;
       cy = event.pageY - offset.top;
-      //console.log(event.pageX, event.pageY);
-      console.log(cx, cy);
+      //console.log(event.pageX, event.pageY); (commented out since it is unnecessary)
+      // console.log(cx, cy); (this was commented out because it is the un-normalized location)
+      // The following for if statements normalize the center of the roi if the touch event is too close to the boundary of the canvas
       if (cx < roiRegion) {
         cx = roiRegion;
       }
@@ -104,18 +114,25 @@ None :D
       if (cy > canvas.height - roiRegion) {
         cy = canvas.height - roiRegion;
       }
+      // This line presents each touch event data into the console
       console.log(cx, cy);
+      // This stores the most recent click data into the clicks array
       clicks.push({x: cx, y: cy});
 
-
+      // This first if statement presents the information after the first click event
       if (clicks.length == 1) {
+        // These four variables create the four corners of the ROI
         var topX = clicks[0].x - roiRegion;
         var topY = clicks[0].y - roiRegion;
         var bottomX = clicks[0].x + roiRegion;
         var bottomY = clicks[0].y + roiRegion;
+        // This presents the touch location and ROI corners into the innerHTML on the page
         coords.innerHTML = 'x1: ' + clicks[0].x + ', y1: ' + clicks[0].y + '<br />' + 'ROI: (' + topX + ',' + topY + ') ' + '(' + topX + ',' + bottomY + ') ' + '(' + bottomX + ',' + bottomY + ') ' + '(' + bottomX + ',' + topY + ') ';
      }
+
+     // This if statement presents the following information after the second touch event
       if (clicks.length == 2) {
+        // These eight variables create the corners of both ROIs
         var topX = clicks[0].x - roiRegion;
         var topY = clicks[0].y - roiRegion;
         var bottomX = clicks[0].x + roiRegion;
@@ -124,6 +141,7 @@ None :D
         var topY2 = clicks[1].y - roiRegion;
         var bottomX2 = clicks[1].x + roiRegion;
         var bottomY2 = clicks[1].y + roiRegion;
+        // This presents the touch location and ROI corners into the innerHTML on the page
         coords.innerHTML = 'x1: ' + clicks[0].x + ', y1: ' + clicks[0].y + '<br />' + 'ROI: (' + topX + ',' + topY + ') ' + '(' + topX + ',' + bottomY + ') ' + '(' + bottomX + ',' + bottomY + ') ' + '(' + bottomX + ',' + topY + ') ' + '<br />' + 'x2: ' + clicks[1].x + ', y2: ' + clicks[1].y + '<br />' + 'ROI: (' + topX2 + ',' + topY2 + ') ' + '(' + topX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + topY2 + ') ';
       }
 
@@ -131,9 +149,12 @@ None :D
 
     }
 
+    // This function calculates the offset of the canvas and corrects for it in the coordinates
+    // Note: I got this function from a website on how to deal with canvas offset
     function getOffset(obj) {
       var offsetLeft = 0;
       var offsetTop = 0;
+      // The do function uses the innate offset functionn of an object (in this case the canvas)
       do {
         if (!isNaN(obj.offsetLeft)){
           offsetLeft += obj.offsetLeft;
@@ -191,6 +212,8 @@ None :D
             //} // end of for loop
             //context2.putImageData(image2, 0, 0);
             // this put the altered image on the second canvas: commented out since not needed for app 9
+
+            // This calls the init function
             init();
 
             //canvas_x = event.targetTouches[0].pageX;
@@ -201,7 +224,7 @@ None :D
             //canvas_x = event.pageX;
             //canvas_y = event.pageY;
             //alert("X=" + canvas_x + " Y=" + canvas_Y);
-            //}
+            //} The above function was commented out since it was not needed in this area
 
 
 
@@ -232,6 +255,7 @@ None :D
       <p> Step 1. Take an image of the two tubes with the tubes being the main focus of the image</p>
       <p> Step 2. Tap the left tube and then the right tube with your finger so that the app knows where to look</p>
       <p> Step 3. Wait for the app to display the results about the color analysis</p>
+      <p> Step 4. If you tapped the wrong area, refresh the page to select the two areas again </p>
       <a href="#pagetwo" data-role="button">Go to Image Analysis</a> <!-- This button sends the user to the second page where they can actually upload a photo and have it be analyzed -->
     </div>
     <div data-role="footer" data-position="fixed">
@@ -243,16 +267,16 @@ None :D
     <div data-role="header">
       <h1>Image Analysis</h1></div><!-- /header -->
       <div data-role="content">
-        <h2>Push button to take or upload picture.</h2>
+        <h2>Push button to take or upload picture.</h2> <!-- This button's code is written above, and it is from App8-->
         <div>
-          <a href="#pageone" data-role="button">Or go back to page one!</a>
+          <a href="#pageone" data-role="button">Or go back to page one!</a> <!-- This button sends the user back to page one if they want to look at the instructions again, it does not clear the data of page 2-->
           Press orange button to create or choose image file:
           <input type="file" id="fileInput" STYLE="background-color: #FF6600;">
         </div>
         <div id="messageDisplayArea"></div>
 
         <div id="coords"></div>
-        <canvas id="myCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen... -->
+        <canvas id="myCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen, it has a border of 1 pixel-->
         <script> /* This script initiates the cavas and puts the text on the canvas "myCanvas" */
         var canvas = document.getElementById('myCanvas');
         var context = canvas.getContext("2d");
@@ -268,7 +292,7 @@ None :D
         context2.font = '20pt Calibri';
         context2.fillStyle = "black";
         context2.fillText("Isolated blue colors of the original image go here", 10, 20);
-      </script> -->
+      </script> This code was commented out since it only related to App8-->
 
     </div><!-- /content -->
     <div data-role="footer" data-position="fixed">
