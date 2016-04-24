@@ -105,12 +105,33 @@ None :D
         cy = canvas.height - roiRegion;
       }
       console.log(cx, cy);
-      clicks.push({x: cx, y: cy})
-      coords.innerHTML = 'x1: ' + cx+ ', y1: ' + cy;
+      clicks.push({x: cx, y: cy});
+
+
+      if (clicks.length == 1) {
+        var topX = clicks[0].x - roiRegion;
+        var topY = clicks[0].y - roiRegion;
+        var bottomX = clicks[0].x + roiRegion;
+        var bottomY = clicks[0].y + roiRegion;
+        coords.innerHTML = 'x1: ' + clicks[0].x + ', y1: ' + clicks[0].y + '<br />' + 'ROI: (' + topX + ',' + topY + ') ' + '(' + topX + ',' + bottomY + ') ' + '(' + bottomX + ',' + bottomY + ') ' + '(' + bottomX + ',' + topY + ') ';
+     }
+      if (clicks.length == 2) {
+        var topX = clicks[0].x - roiRegion;
+        var topY = clicks[0].y - roiRegion;
+        var bottomX = clicks[0].x + roiRegion;
+        var bottomY = clicks[0].y + roiRegion;
+        var topX2 = clicks[1].x - roiRegion;
+        var topY2 = clicks[1].y - roiRegion;
+        var bottomX2 = clicks[1].x + roiRegion;
+        var bottomY2 = clicks[1].y + roiRegion;
+        coords.innerHTML = 'x1: ' + clicks[0].x + ', y1: ' + clicks[0].y + '<br />' + 'ROI: (' + topX + ',' + topY + ') ' + '(' + topX + ',' + bottomY + ') ' + '(' + bottomX + ',' + bottomY + ') ' + '(' + bottomX + ',' + topY + ') ' + '<br />' + 'x2: ' + clicks[1].x + ', y2: ' + clicks[1].y + '<br />' + 'ROI: (' + topX2 + ',' + topY2 + ') ' + '(' + topX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + topY2 + ') ';
+      }
+
+
+
     }
 
     function getOffset(obj) {
-      var canvas
       var offsetLeft = 0;
       var offsetTop = 0;
       do {
@@ -231,7 +252,7 @@ None :D
         <div id="messageDisplayArea"></div>
 
         <div id="coords"></div>
-        <canvas id="myCanvas" width=600 height=500 style="border:0px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen... -->
+        <canvas id="myCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen... -->
         <script> /* This script initiates the cavas and puts the text on the canvas "myCanvas" */
         var canvas = document.getElementById('myCanvas');
         var context = canvas.getContext("2d");
