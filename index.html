@@ -28,7 +28,7 @@ Brief Description of Goal of Code:
 To analyze the photo for green pigment
 
 Known Issues:
-Sometimes, if the page is scrolled up, then the page won't scroll down again.
+Sometimes, if the page is scrolled up, then the page won't scroll down again. EDIT: This issue was fixed by removing the  data-position="fixed" from the footer on page 2
 -->
 
 <head>
@@ -261,9 +261,9 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again.
     <div data-role="footer" data-position="fixed">
       <p>DIY Diagnostics</p>
     </div><!-- /footer -->
-  </div>
-  <div data-role="page" id="pagetwo">
+  </div><!-- closes page 1 -->
 
+  <div data-role="page" id="pagetwo">
     <div data-role="header">
       <h1>Image Analysis</h1></div><!-- /header -->
       <div data-role="content">
@@ -276,7 +276,9 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again.
         <div id="messageDisplayArea"></div>
 
         <div id="coords"></div>
+
         <canvas id="myCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen, it has a border of 1 pixel-->
+
         <script> /* This script initiates the cavas and puts the text on the canvas "myCanvas" */
         var canvas = document.getElementById('myCanvas');
         var context = canvas.getContext("2d");
@@ -295,7 +297,7 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again.
       </script> This code was commented out since it only related to App8-->
 
     </div><!-- /content -->
-    <div data-role="footer" data-position="fixed">
+    <div data-role="footer">
       <p>DIY Diagnostics</p>
     </div><!-- /footer -->
   </div><!-- /page -->
