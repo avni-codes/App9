@@ -82,8 +82,15 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
     var roiRegion = 10;
     // Get a reference to our touch-sensitive element
     var touchzone = document.getElementById("myCanvas");
-    // ALlow the variable coords to be associated with the innerHTML
-    var coords = document.getElementById("coords");
+    // ALlow the variables to be associated with the innerHTML, so they can be called to appear on various pages
+    var coords = document.getElementById("coords"); //location of clicks
+    var red1av = document.getElementById("red1av"); //average R values
+    var red2av = document.getElementById("red2av"); //average R value of click 2
+    var green1av = document.getElementById("green1av"); //average green value of click 1
+    var green2av = document.getElementById("green2av"); //average green value of click 2
+    var blue1av = document.getElementById("blue1av"); //average blue value of click 1
+    var blue2av = document.getElementById("blue2av"); //average blue value fo click 2
+    var greenMost = document.getElementById("greenMost");
     // Add an event handler for the touchstart event either a touch or a click
     touchzone.addEventListener("touchstart", touchHandler, false);
     touchzone.addEventListener("mousedown", touchHandler, false);
@@ -97,10 +104,19 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
       // This line calls the function getOffset to account for the fact that the canvas is not at point 0,0 of the page
       var offset = getOffset(canvas);
       // cx and cy are the x and y coordinates normalized for offset of each touch event
-      cx = event.pageX - offset.left;
-      cy = event.pageY - offset.top;
-      //console.log(event.pageX, event.pageY); (commented out since it is unnecessary)
-      // console.log(cx, cy); (this was commented out because it is the un-normalized location)
+      // If the event is a mouse click event, then the cx and cy will come from the touchzone event listener
+      if (!isNaN(event.pageX)) {
+        cx = event.pageX - offset.left;
+        cy = event.pageY - offset.top;
+      }
+
+      // If the event is a touch event, then this function will take the first touch event and store it
+      else {
+        var touch = event.touches[0];
+        cx = touch.pageX - offset.left;
+        cy = touch.pageY - offset.top;
+      }
+
       // The following for if statements normalize the center of the roi if the touch event is too close to the boundary of the canvas
       if (cx < roiRegion) {
         cx = roiRegion;
@@ -121,70 +137,113 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
 
       // This first if statement presents the information after the first click event
       if (clicks.length == 1) {
-        // These four variables create the four corners of the ROI
+        // These two variables create the top corners of the ROI
         var topX = clicks[0].x - roiRegion;
         var topY = clicks[0].y - roiRegion;
-        var bottomX = clicks[0].x + roiRegion;
-        var bottomY = clicks[0].y + roiRegion;
         // This presents the touch location and ROI corners into the innerHTML on the page
-        coords.innerHTML = 'x1: ' + clicks[0].x + ', y1: ' + clicks[0].y; // + '<br />' + 'ROI: (' + topX + ',' + topY + ') ' + '(' + topX + ',' + bottomY + ') ' + '(' + bottomX + ',' + bottomY + ') ' + '(' + bottomX + ',' + topY + ') ';
+        coords.innerHTML = 'Click One: (' + clicks[0].x + ', ' + clicks[0].y + ')' + '<br />' + 'Now touch or click one more area on the image'; // + '<br />' + 'ROI: (' + topX + ',' + topY + ') ' + '(' + topX + ',' + bottomY + ') ' + '(' + bottomX + ',' + bottomY + ') ' + '(' + bottomX + ',' + topY + ') ';
      }
 
      // This if statement presents the following information after the second touch event
       if (clicks.length == 2) {
-        // These eight variables create the corners of both ROIs
+        // These four variables create the top corners of both ROIs
         var topX = clicks[0].x - roiRegion;
         var topY = clicks[0].y - roiRegion;
-        var bottomX = clicks[0].x + roiRegion;
-        var bottomY = clicks[0].y + roiRegion;
+
         var topX2 = clicks[1].x - roiRegion;
         var topY2 = clicks[1].y - roiRegion;
-        var bottomX2 = clicks[1].x + roiRegion;
-        var bottomY2 = clicks[1].y + roiRegion;
-        // This presents the touch location and ROI corners into the innerHTML on the page
-        coords.innerHTML = 'x1: ' + clicks[0].x + ', y1: ' + clicks[0].y + '<br />' + 'x2: ' + clicks[1].x + ', y2: ' + clicks[1].y; // + '<br />' + 'ROI: (' + topX2 + ',' + topY2 + ') ' + '(' + topX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + topY2 + ') ';
 
+        // This presents the touch location and ROI corners into the innerHTML on the page
+        coords.innerHTML = 'Click One: (' + clicks[0].x + ', ' + clicks[0].y + ')' + '<br />' + 'Click Two: (' + clicks[1].x + ', ' + clicks[1].y + ')'; // + '<br />' + 'ROI: (' + topX2 + ',' + topY2 + ') ' + '(' + topX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + bottomY2 + ') ' + '(' + bottomX2 + ',' + topY2 + ') ';
+
+        // the image variables and data variables store the image data of the first roi and second roi starting from the top corner
         var image = context.getImageData(topX, topY, roiRegion*2, roiRegion*2);
         var data = image.data;
         var image2 = context.getImageData(topX2, topY2, roiRegion*2, roiRegion*2);
         var data2 = image2.data;
 
+        // this set of variable statemetns set the variables that store the RGB values to zero
+        var greenOne = 0;
+        var greenTwo = 0;
+        var blueOne = 0;
+        var blueTwo = 0;
+        var redOne = 0;
+        var redTwo = 0;
+
+        //this variable define the area of the roi
+        var count = 4* Math.pow(roiRegion, 2);
+
+        //This code comes primarily from app8, it goes through the ROI and stores the RGB values. It also turns the ROI green.
         for(var i = 0; i < data.length; i += 4) {
-          var greenOne = data[i + 1]; //G
-          data[i] = 0;
-          data[i + 2] = 0;
-          context.putImageData(image, topX, topY);
+          greenOne += data[i + 1]; //G
+          redOne += data[i]; //R
+          blueOne += data[i + 2]; //B
+          data[i] = 0; //Set R to zero
+          data[i + 2] = 0; //Set B to zero
+          context.putImageData(image, topX, topY); //place the edited R and B values into the first ROI
         } // end of for loop
 
+        //This code comes primarily from app8, it goes through the second ROI and stores the RGB values. It also turns the ROI green.
         for(var i = 0; i < data2.length; i += 4) {
-          var greenTwo = data2[i + 1]; //G
-          data2[i] = 0;
-          data2[i + 2] = 0;
-          context.putImageData(image2, topX2, topY2);
+          greenTwo += data2[i + 1]; //G
+          redTwo += data2[i]; //R
+          blueTwo += data2[i + 2]; //B
+          data2[i] = 0; //set R to 0
+          data2[i + 2] = 0; //set B to zero
+          context.putImageData(image2, topX2, topY2); //place the edited R and B values into the first ROI
         }
+
+        // these variables calculate the average value of each of the RBG for both ROIs
+        var g1av = greenOne / count;
+        var g2av = greenTwo / count;
+        var r1av = redOne / count;
+        var r2av = redTwo / count;
+        var b1av = blueOne / count;
+        var b2av = blueTwo / count;
+
+        // This creates a variable that's meaning will change depending on which ROI has the highest G average
+        var mostGreen = "";
+        if (g1av > g2av) {
+          mostGreen = "Region 1 has the most green color";
+        }
+        else if (g2av > g1av){
+          mostGreen = "Region 2 has the most green color";
+        }
+        else {
+          mostGreen = "Both regions have the same amount of green";
+        }
+
+        // This sends the RGB values into the console, for testing purposes
+        console.log(g1av, g2av);
+        console.log(r1av, r2av);
+        console.log(b1av, b2av);
+
+        //These store the RGB values into IDs that can be called in the pages
+        red1av.innerHTML = r1av;
+        red2av.innerHTML = r2av;
+        green1av.innerHTML = g1av;
+        green2av.innerHTML = g2av;
+        blue1av.innerHTML = b1av;
+        blue2av.innerHTML = b2av;
+        greenMost.innerHTML = mostGreen;
+
 
       }
 
 
-      // the below line of code creates the  image data that will be analyzed
-      //var topX = clicks[0].x - roiRegion;
-      //var topY = clicks[0].y - roiRegion;
-      //var topX2 = clicks[1].x - roiRegion;
-      //var topY2 = clicks[1].y - roiRegion;
-      //var image = context.getImageData(topX, topY, 20, 20);
-      // This below line of code gets the image data for the  canvas
-      //var data = image.data;
 
+      event.preventDefault();
+      return false;
+      //This is to prevent a double click event where touch and mouse events are both stored.
 
-
-    }
+    } //end of touchhandler
 
     // This function calculates the offset of the canvas and corrects for it in the coordinates
     // Note: I got this function from a website on how to deal with canvas offset
     function getOffset(obj) {
       var offsetLeft = 0;
       var offsetTop = 0;
-      // The do function uses the innate offset functionn of an object (in this case the canvas)
+      // The 'do' function uses the innate offset functionn of an object (in this case the canvas)
       do {
         if (!isNaN(obj.offsetLeft)){
           offsetLeft += obj.offsetLeft;
@@ -197,8 +256,6 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
     }
 
   }
-
-
 
 
   /* window.onload necessary to keep javascripts from running before the app gets a chance to load entirely. */
@@ -229,35 +286,9 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
             /* PUT ANY CHANGES TO THE JAVASCRIPT HERE  */
             //drawImageIOSFix(context,img, topX, topY, bottomX, bottomY);
 
-              // the above line of code creates the  image data that will be analyzed
-              //var image = context.getImageData(topX, topY, 20, 20);
-              // This above line of code gets the image data for the  canvas
-              //var data = image.data;
-
-              // the below for loop goes through the pixels of the image and only takes the blue pigments of them
-              //for(var i = 0; i < data.length; i += 4) {
-              //data[i] = 0;
-              // The above line of code sets the R value to 0
-              //data[i + 2] = 0;
-              // The above line of code sets the G value to 0
-              //} // end of for loop
-              //context2.putImageData(image2, 0, 0);
-              // this put the altered image on the second canvas: commented out since not needed for app 9
 
               // This calls the init function
             init();
-
-              //canvas_x = event.targetTouches[0].pageX;
-              //canvas_y = event.targetTouches[0].pageY;
-              //alert("X=" + canvas_X + " Y=" + canvas_Y)
-              //}
-              //function doMouseDown(event) {
-              //canvas_x = event.pageX;
-              //canvas_y = event.pageY;
-              //alert("X=" + canvas_x + " Y=" + canvas_Y);
-              //} The above function was commented out since it was not needed in this area
-
-
 
           } // end of img.onload
 
@@ -274,6 +305,21 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
     }); // end of the fileInput.addEventListener function
   } // end of the window.onload function
   </script>
+
+  <style>
+  /* This creates the border of the table on the conclusion page */
+  tr {
+    border-bottom: 1px solid #d6d6d6;
+  }
+  /* This creates the grey background of the table */
+  tr {
+    background: #e9e9e9;
+  }
+  /* this turns the head text of the table bold */
+  thead td {
+    font-weight: bold;
+  }
+  </style>
 </head>
 
 <body>
@@ -296,17 +342,18 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
 
   <div data-role="page" id="pagetwo">
     <div data-role="header">
+      <a href = "#pageone" data-icon = "home" class = "ui-btn-left">Main Page</a> <!-- this creates a button in the shape of a home to take the user to page 1 -->
       <h1>Image Analysis</h1></div><!-- /header -->
       <div data-role="content">
         <h2>Push button to take or upload picture.</h2> <!-- This button's code is written above, and it is from App8-->
         <div>
-          <a href="#pageone" data-role="button">Or go back to page one!</a> <!-- This button sends the user back to page one if they want to look at the instructions again, it does not clear the data of page 2-->
           Press orange button to create or choose image file:
           <input type="file" id="fileInput" STYLE="background-color: #FF6600;">
         </div>
-        <div id="messageDisplayArea"></div>
 
-        <div id="coords"></div>
+        <div id="messageDisplayArea"></div> <!-- This is where the message from the canvas will show -->
+
+        <div id="coords"></div> <!-- This is where the coordinates will be displayed-->
 
         <canvas id="myCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas> <!-- This code from app 8 makes the canvas where the touch event will happen, it has a border of 1 pixel-->
 
@@ -318,14 +365,12 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
         context.fillText("Original image will go here", 10, 20);
         </script>
 
-        <!-- <canvas id="blueCanvas" width=600 height=500 style="border:1px solid #d3d3d3;"></canvas>
-        <script> /* This makes the second canvas called blueCanvas */
-        var canvas2 = document.getElementById('blueCanvas');
-        var context2 = canvas2.getContext("2d");
-        context2.font = '20pt Calibri';
-        context2.fillStyle = "black";
-        context2.fillText("Isolated blue colors of the original image go here", 10, 20);
-      </script> This code was commented out since it only related to App8-->
+        <div>
+          <a href="#pagethree" data-role="button">Image Data Page</a> <!-- This creates a button to take the user to the conclusion page -->
+          <input type = 'button' onclick="document.location.reload(true);" value='Refresh Page' /> <!-- when clicked, this button will refresh the page, so user can upload a new image and set new click points -->
+
+        </div>
+
 
     </div><!-- /content -->
     <div data-role="footer">
@@ -335,9 +380,38 @@ Sometimes, if the page is scrolled up, then the page won't scroll down again. ED
 
   <div data-role="page" id = "pagethree"> <!-- This creates the third page of the app where users can see the results of the image analysis-->
     <div data-role="header">
-      <h1>Image Analysis</h1> <!-- This sets the name of webpage/ header of the app to Image Analysis-->
+      <h1>Image Data Page</h1> <!-- This sets the name of webpage/ header of the app to Image Analysis-->
+      <a href = "#pageone" data-icon = "home" class = "ui-btn-left">Main Page</a> <!-- this creates a button in the shape of a home to take the user to page 1 -->
     </div>
     <div data-role="content">
+      <table> <!-- This creates a table, where all the color data will be presented.-->
+        <thead> <!-- This creates the head of the table-->
+          <tr> <!-- This creates the first row of the table with the row catagories-->
+            <td> Color   </td>
+            <td> Click 1 </td>
+            <td> Click 2 </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="color:#FF0000;"> <!-- this creates the second row, and the text will be red -->
+            <td> <b> Red </b> </td>
+            <td id="red1av"></td> <!-- This is the red average of region 1-->
+            <td id="red2av"></td> <!-- This is the red average of region 2-->
+          </tr>
+          <tr style="color:#009900;"> <!-- this creates the third row, and the text will be green -->
+            <td> <b> Green </b> </td>
+            <td id="green1av"></td> <!-- This is the green average of region 1-->
+            <td id="green2av"></td><!-- This is the green average of region 2-->
+          </tr>
+          <tr style="color:#0000FF;"> <!-- this creates the fourth row, and the text will be blue -->
+            <td> <b> Blue </b> </td>
+            <td id="blue1av"></td> <!-- This is the blue average of region 1-->
+            <td id="blue2av"></td> <!-- This is the blue average of region 2-->
+          </tr>
+        </tbody>
+      </table>
+
+      <div id="greenMost"></div> <!-- this produces the text that will tell the user which region had the highest green average -->
 
       <a href="#pagetwo" data-role="button">Go back to Image Analysis</a> <!-- This button sends the user to the second page if they want to do image analysis again-->
     </div>
